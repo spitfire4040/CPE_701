@@ -1,0 +1,262 @@
+#!/usr/bin/python
+
+# header files
+import socket
+import sys
+import thread
+import SocketServer
+import os
+import time
+import random
+import binascii
+
+# create path to included files
+sys.path.append('../PhysicalLayer')
+sys.path.append('../NetworkLayer')
+
+# import files
+import Physical
+import Network
+
+# set global variables
+hostname = ' '
+port = 0
+link1_hostname = ' '
+link1_port = ' '
+link2_hostname = ' '
+link2_port = ' '
+LOSS_FLAG = False
+CORRUPT_FLAG = False
+link1_flag = False
+link2_flag = False
+timer1_flag = False
+timer2_flag = False
+inhibit1 = False
+inhibit2 = False
+
+
+# Class: MyUDPHandler
+class MyUDPHandler(SocketServer.BaseRequestHandler):
+
+  # interrupt handler for incoming messages
+    def handle(self):
+      global hosname, port, link1_hostname, link1_port, link2_hostname, link2_port, link1_flag, link2_flag
+
+      data = self.request[0].strip()
+      message = data
+      message = message.split()
+
+      # look for 'hello' message
+      if message[0] == "hhhhh":
+        
+        # set link flags
+        if message[1] == link1_port:
+          link1_flag = True
+        if message[1] == link2_port:
+          link2_flag = True
+
+      # not hello, forward to network layer
+      else:
+        Network.l3_recvfrom(data)
+
+
+      """
+      try:
+        if message == "STATUS":
+          status("CONFIRM", returnHost, returnPort)
+
+        if message == "CONFIRM" and returnHost == CONN1_HOSTNAME and returnPort == CONN1_PORT:
+          CONN1_UP = True
+
+        if message == "CONFIRM" and returnHost == CONN2_HOSTNAME and returnPort == CONN2_PORT:
+          CONN2_UP = True
+
+        if message == "error":
+          print "garbled message, try again"
+          print ' '
+          print "Enter a command (or HELP):  "
+      except:
+        pass
+      """
+
+
+# Function: status()
+def l2_sendto(node, dest_nid, data):
+  global LOSS_FLAG, CORRUPT_FLAG
+
+  # call garbler function each time...
+  garbler()
+
+  # check garbler flags to see if packet lost
+  if (LOSS_FLAG == False):    
+    try:
+      payload = data
+
+      # check garbler to see if packet garbled
+      if (CORRUPT_FLAG == True):
+        payload = 'sldkjfsk' + payload
+
+      # check links to find hostname and port of recipient
+      links = node.GetLinks()
+      link1 = links[0]
+      link2 = links[1]
+
+      if (link1[0] == int(dest_nid)):
+        hostname = link1[1]
+        port = link1[2]
+
+      if (link2[0] == int(dest_nid)):
+        hostname = link2[1]
+        port = link2[2]
+
+      # create udp socket and send
+      sock = socket.socket(socket.AF_INET, # Internet
+                   socket.SOCK_DGRAM) # UDP
+      sock.sendto(payload, (hostname, int(port)))
+    except:
+      print "couldn't send message"
+  else:
+    pass
+
+  # reset loss/corruption flags
+  LOSS_FLAG = False
+  CORRUPT_FLAG = False
+
+
+# function: start listener
+def start_listener(node):
+  # global variables
+  global hosname, port, link1_hostname, link1_port, link2_hostname, link2_port
+
+  # check links for node attributes
+  links = node.GetLinks()
+  link1 = links[0]
+  link2 = links[1]
+
+  link1_hostname = link1[1]
+  link1_port = link1[2]
+
+  link2_hostname = link2[1]
+  link2_port = link2[2]
+
+  hostname = node.GetHostName()
+  nid = node.GetNID()
+  port = node.GetPort()
+
+  # slight pause to let things catch up
+  time.sleep(2)
+
+  # start threads for listener, hello, and timer
+  thread.start_new_thread(receiver, ())
+  thread.start_new_thread(hello, ())
+  thread.start_new_thread(timer, (node,))
+
+
+# function: receiver (listener)
+def receiver():
+  global hostname, port
+
+  # set socket for listener
+  try:
+    server = SocketServer.UDPServer(('localhost', int(port)), MyUDPHandler)
+    server.serve_forever()
+
+  # report error if fail
+  except:
+    print "failed to start listener"
+
+
+# function: hello (alive)
+def hello():
+  # global variables
+  global hostname, port, link1_hostname, link1_port, link2_hostname, link2_port
+
+  # eternal loop
+  while (1):
+
+    # open socket and send to neighbor 1
+    sock = socket.socket(socket.AF_INET, # Internet
+                   socket.SOCK_DGRAM) # UDP
+    sock.sendto("hhhhh" + ' ' + port, (link1_hostname, int(link1_port)))
+    time.sleep(1)
+
+    # open socket and send to neighbor 2
+    sock = socket.socket(socket.AF_INET, # Internet
+                   socket.SOCK_DGRAM) # UDP
+    sock.sendto("hhhhh" + ' ' + port, (link2_hostname, int(link2_port)))
+    time.sleep(1)
+
+
+# function: timer (for hello)
+def timer(node):
+  global link1_flag, link2_flag, inhibit1, inhibit2
+
+  # eternal loop
+  while (1):
+
+    # first wait 10 seconds, then set flags to false
+    for x in range(10):
+      time.sleep(1)
+    link1_flag = False
+    link2_flag = False
+
+    # now check for true for 5 second period
+    for x in range(5):
+      time.sleep(1)
+
+    # if true flag found, set neighbor 1 up flag
+    if link1_flag == False:
+      node.SetUpFlagL1(False)
+    if link1_flag == True and inhibit1 == False:
+      node.SetUpFlagL1(True)
+
+    # check for inhibit
+    if inhibit1 == True:
+      node.SetUpFlagL1(False)
+
+    # if true flag found, set neighbor 2 flag
+    if link2_flag == False:
+      node.SetUpFlagL2(False)
+    if link2_flag == True and inhibit2 == False:
+      node.SetUpFlagL2(True)
+
+    # check for inhibit
+    if inhibit2 == True:
+      link2.SetUpFlagL2(False)
+
+
+# function: inhibit
+def inhibit(N):
+  global inhibit1, inhibit2
+  if N == 'i1':
+    inhibit1 = True
+
+  if N == 'u1':
+    inhibit1 = False
+
+  if N == 'i2':
+    inhibit2 = True
+
+  if N == 'u2':
+    inhibit2 = False
+
+
+# function: garbler
+def garbler(L, C):
+  # Packet Loss Flags, probablility variable
+  global LOSS_FLAG, CORRUPTION_FLAG
+
+  # generate random number and set flag
+  lossList = []
+  lossList = random.sample(range(1, 100), int(L))
+  if (50 in lossList):
+    LOSS_FLAG = True
+
+  # Corruption Flags, probablility variable
+  corruptList = []
+
+  # generate random number and set flag
+  corruptList = random.sample(range(1, 100), int(C))
+  if (50 in corruptList):
+    CORRUPT_FLAG = True
+  raw_input('waiting')
