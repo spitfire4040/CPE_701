@@ -307,7 +307,7 @@ def main (argv):
 
 		# display next hop data
 		if (message == '7'):
-			route_table()
+			route_table(node)
 
 		# down link to node x
 		if (message == '8'):
