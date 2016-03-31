@@ -95,6 +95,8 @@ def l2_sendto(node, last_nid, payload):
         target = n1
 
       else:
+        # This is where I will call the routing function for the first hop
+        # target = Routing.next_hop()
         target = n1
 
       # get links for this node

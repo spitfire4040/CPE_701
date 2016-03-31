@@ -1,27 +1,15 @@
-#!/usr/bin/python2.5
-
-# CPE 701: Internet Protocol Design, Spring 2010
-# Project - Emulation of a Reliable Transport Protocol
-#
-# Authors: Jeffrey Naruchitparames, Qiping Yan
-# University of Nevada, Reno
-# Department of Computer Science and Engineering
-#
-# File: RouteLayer.py (from Task D: The routing protocol)
-# This is not really a layer of our protocol stack, but rather part of Layer 3, 
-# which is the Network layer (task C).
-
+#!/usr/bin/python
 
 import errno      # For errors!
 import socket     # Low-level networking interface.
 import sys        # Basic system functionality.
 import threading  # Higher-level threading interface.
 
-sys.path.append('../taskA')
-sys.path.append('../taskB')
+sys.path.append('../PhysicalLayer')
+sys.path.append('../LinkLayer')
 
-import Node
-import LinkLayer
+import Physical
+import Link
 
 
 def Announce (link_from_node, link_to_node, link_change):

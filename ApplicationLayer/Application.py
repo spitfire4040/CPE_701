@@ -133,8 +133,8 @@ def set_garbler(L, C):
 
 
 # function: route table
-def route_table():
-	pass
+def route_table(node):
+	Routing.print_table(node)
 
 	"""
 	This command prints the local routing table at the node. It must show the
@@ -307,7 +307,7 @@ def main (argv):
 
 		# display next hop data
 		if (message == '7'):
-			route_table()
+			route_table(node)
 
 		# down link to node x
 		if (message == '8'):

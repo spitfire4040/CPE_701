@@ -18,9 +18,9 @@ import Routing
 import Application
 
 def l4_sendto(node, dest_nid, data):
-  segment = data
-  Network.l3_sendto(node, dest_nid, segment)
+	segment = data
+	Network.l3_sendto(node, dest_nid, segment)
 
 def l4_recvfrom(segment):
-  data = segment
-  Application.l5_recvfrom(data)
+	data = segment
+	Application.l5_recvfrom(data)
