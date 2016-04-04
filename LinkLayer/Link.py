@@ -10,6 +10,7 @@ import time
 import random
 import binascii
 import pickle
+import json
 
 # create path to included files
 sys.path.append('../PhysicalLayer')
@@ -35,6 +36,8 @@ timer2_flag = False
 inhibit1 = False
 inhibit2 = False
 mynode = None
+L = 0
+C = 0
 
 
 # Class: MyUDPHandler
@@ -67,17 +70,18 @@ class MyUDPHandler(SocketServer.BaseRequestHandler):
 
 # Function: l2_sendto()
 def l2_sendto(node, last_nid, payload):
-  global mynode, nid, LOSS_FLAG, CORRUPT_FLAG
+  global mynode, nid, LOSS_FLAG, CORRUPT_FLAG, L, C
 
   # call garbler function each time...
-  #garbler()
+  garbler()
 
   # check garbler flags to see if packet lost
   if (LOSS_FLAG == False):    
     try:
-      # check garbler to see if packet garbled
       if (CORRUPT_FLAG == True):
-        payload = 'sldkjfsk' + payload
+        data = json.loads(payload)
+        data['payload'] = (data['payload'] + 'abcde')
+        payload = json.dumps(data)
 
       # get link table and find links for this node
       links = node.GetLinkTable()
@@ -122,9 +126,11 @@ def l2_sendto(node, last_nid, payload):
   else:
     pass
 
-  # reset loss/corruption flags
+  # reset garbler
   LOSS_FLAG = False
   CORRUPT_FLAG = False
+  L = 0
+  C = 0
 
 
 # function: start listener
@@ -247,14 +253,25 @@ def inhibit(N):
     inhibit2 = False
 
 
+# function: set_garbler
+def set_garbler(l, c):
+  # initialize global variables
+  global L, C
+
+  # set global values
+  L = l
+  C = c
+
 # function: garbler
-def garbler(L, C):
+def garbler():
   # Packet Loss Flags, probablility variable
-  global LOSS_FLAG, CORRUPTION_FLAG
+  global LOSS_FLAG, CORRUPT_FLAG, L, C
 
   # generate random number and set flag
   lossList = []
-  lossList = random.sample(range(1, 100), int(L))
+
+  # generate random number and set flag
+  lossList = random.sample(range(1, 101), int(L))
   if (50 in lossList):
     LOSS_FLAG = True
 
@@ -262,7 +279,6 @@ def garbler(L, C):
   corruptList = []
 
   # generate random number and set flag
-  corruptList = random.sample(range(1, 100), int(C))
+  corruptList = random.sample(range(1, 101), int(C))
   if (50 in corruptList):
     CORRUPT_FLAG = True
-  raw_input('waiting')

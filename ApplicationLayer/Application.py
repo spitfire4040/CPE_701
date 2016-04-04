@@ -3,6 +3,8 @@
 # import header files
 import os
 import sys
+import thread
+import time
 
 # create paths to folders
 sys.path.append('../PhysicalLayer')
@@ -93,8 +95,12 @@ def close(C):
 	"""
 
 # function: download
-def download(C, F):
-	pass
+def download(node, parameters):
+	params = parameters
+	C = params[0]
+	F = params[1]
+
+
 
 	"""
 	This command downloads a file with name F through the connection with CID
@@ -118,23 +124,23 @@ def set_garbler(L, C):
 	print "L = ", L
 	print "C = ", C
 	if int(L) > 100:
-		os.system('clear')
+		#os.system('clear')
 		print "Failure: Loss = " + str(L) + "% bad argument"
 		raw_input("press enter to continue...")
 
 	elif int(C) > 100:
-		os.system('clear')
+		#os.system('clear')
 		print "Failure: Corruption = " + str(C) + "% bad argument"
 		raw_input("press enter to continue...")
 
 	else:
-		Link.garbler(L, C)
-		os.system('clear')
+		Link.set_garbler(L, C)
+		#os.system('clear')
 
 
 # function: route table
 def route_table(node):
-	Routing.print_table(node)
+	Routing.route_table(node)
 
 	"""
 	This command prints the local routing table at the node. It must show the
@@ -296,8 +302,8 @@ def main (argv):
 		# download from node x
 		if (message == '5'):
 			C = raw_input("Enter the CID of the peer from whom you would like to download: ")
-			F = raw_input("Enter the name of the file you would like to download")
-			download(C, F)
+			F = raw_input("Enter the name of the file you would like to download: ")
+			thread.start_new_thread(download, (node,(C,F)))
 
 		# set garbler probability
 		if (message == '6'):
