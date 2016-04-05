@@ -15,10 +15,12 @@ import json
 # create path to included files
 sys.path.append('../PhysicalLayer')
 sys.path.append('../NetworkLayer')
+sys.path.append('../RoutingProtocol')
 
 # import files
 import Physical
 import Network
+import Routing
 
 # set global variables
 hostname = ' '
@@ -69,7 +71,7 @@ class MyUDPHandler(SocketServer.BaseRequestHandler):
 
 
 # Function: l2_sendto()
-def l2_sendto(node, last_nid, payload):
+def l2_sendto(node, last_nid, dest_nid, payload):
   global mynode, nid, LOSS_FLAG, CORRUPT_FLAG, L, C
 
   # call garbler function each time...
@@ -99,9 +101,8 @@ def l2_sendto(node, last_nid, payload):
         target = n1
 
       else:
-        # This is where I will call the routing function for the first hop
-        # target = Routing.next_hop()
-        target = n1
+        #target = n1
+        target = Routing.next_hop(node, dest_nid)
 
       # get links for this node
       links = node.GetLinks()
@@ -235,6 +236,9 @@ def timer(node):
     # check for inhibit
     if inhibit2 == True:
       link2.SetUpFlagL2(False)
+
+    #print "up flag 1: ", node.GetUpFlagL1()
+    #print "up flag 2: ", node.GetUpFlagL2()
 
 
 # function: inhibit

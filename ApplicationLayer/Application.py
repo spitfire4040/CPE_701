@@ -5,6 +5,7 @@ import os
 import sys
 import thread
 import time
+from random import randint
 
 # create paths to folders
 sys.path.append('../PhysicalLayer')
@@ -44,6 +45,11 @@ def menu():
 # function: start service
 def start_service(P):
 	pass
+
+
+
+
+
 
 	"""
 	This command establishes a service point at the local node, say X. The
@@ -124,18 +130,18 @@ def set_garbler(L, C):
 	print "L = ", L
 	print "C = ", C
 	if int(L) > 100:
-		#os.system('clear')
+		os.system('clear')
 		print "Failure: Loss = " + str(L) + "% bad argument"
 		raw_input("press enter to continue...")
 
 	elif int(C) > 100:
-		#os.system('clear')
+		os.system('clear')
 		print "Failure: Corruption = " + str(C) + "% bad argument"
 		raw_input("press enter to continue...")
 
 	else:
 		Link.set_garbler(L, C)
-		#os.system('clear')
+		os.system('clear')
 
 
 # function: route table
@@ -238,7 +244,6 @@ def l5_recvfrom(data):
 
 # main function
 def main (argv):
-
 	#check for proper input
  	if len(sys.argv) != 3:
 		PrintUsage()

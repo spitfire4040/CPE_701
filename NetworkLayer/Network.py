@@ -67,7 +67,7 @@ def l3_sendto(node, dest_nid, segment):
   payload = json.dumps(datagram)
 
   # pass to link layer for sending
-  Link.l2_sendto(node, last_nid, payload)
+  Link.l2_sendto(node, last_nid, dest_nid, payload)
 
 # function: l3_recvfrom
 def l3_recvfrom(node, message):
@@ -93,4 +93,4 @@ def l3_recvfrom(node, message):
   # if its not for this node, send it back down to layer 2
   else:
     datagram = json.dumps(data)
-    Link.l2_sendto(node, last_nid, datagram)
+    Link.l2_sendto(node, last_nid, dest_nid, datagram)

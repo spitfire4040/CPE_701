@@ -15,7 +15,21 @@ This command prints the local routing table at the node. It must show the
 corresponding next-hop and the cost of the route in terms of number of hops.
 """
 
+# Hello Sifat! The flags are now working, can they be used to dynamically determine the next hop?
+# I set them as global, and they are called when the function is called (link1_flag, link2_flag)
+
+# initialize global variables
+link1_flag = ''
+link2_flag = ''
+
 def route_table(node):
+	# include global variables
+	global link1_flag, link2_flag
+
+	# set state of link flags
+	link1_flag = node.GetUpFlagL1()
+	link2_flag = node.GetUpFlagL2()
+
 	links = node.GetLinks()
 	tabl = node.linkTable
 	print tabl
@@ -74,18 +88,29 @@ def route_table(node):
 				nhop = links[1][0]
 			print '{0:^14}{1:^21}{2:^3}\n'.format(k, metrix, nhop)
 
-			#print link2[0]
+	#print link2[0]
+	# print state of flags (for testing)
+	print "Link 1 flag is ", link1_flag
+	print "Link 2 flag is ", link2_flag
 
 
 	raw_input("press enter to continue...")
 
 	#pass
 
-def next_hop(node):
+def next_hop(node, last_nid):
+	# include global variables
+	global link1_flag, link2_flag
+
+	# set state of link flags
+	link1_flag = node.GetUpFlagL1()
+	link2_flag = node.GetUpFlagL2()
+
 	links = node.GetLinks()
 	tabl = node.linkTable
+	print "in routing", last_nid;
 	for k in tabl.keys():
-		if (k!=int(node.nid)):
+		if (k==int(last_nid)):
 			metrix1 = 1
 			tn1 = int(node.nid)
 			tn2 = links[0][0]
@@ -133,7 +158,9 @@ def next_hop(node):
 			if metrix2>metrix1: 
 				metrix = metrix1
 				nh = links[0][0]
+				print nh
 			else: 
 				metrix = metrix2
 				nh = links[1][0]
+				print nh
 	return nh
