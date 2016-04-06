@@ -86,6 +86,15 @@ def route_table(node):
 			else: 
 				metrix = metrix2
 				nhop = links[1][0]
+			if link1_flag==False and link2_flag==False:
+				metrix = "inf"
+				nhop = "not reachable"
+			if link1_flag==False and link2_flag==True:
+				metrix = metrix2
+				nhop = links[1][0]
+			if link1_flag==True and link2_flag==False:
+				metrix = metrix1
+				nhop = links[0][0]
 			print '{0:^14}{1:^21}{2:^3}\n'.format(k, metrix, nhop)
 
 	#print link2[0]
@@ -163,4 +172,13 @@ def next_hop(node, last_nid):
 				metrix = metrix2
 				nh = links[1][0]
 				print nh
+			if link1_flag==False and link2_flag==False:
+				metrix = "inf"
+				nh = "not reachable"
+			if link1_flag==False and link2_flag==True:
+				metrix = metrix2
+				nh = links[1][0]
+			if link1_flag==True and link2_flag==False:
+				metrix = metrix1
+				nh = links[0][0]
 	return nh
