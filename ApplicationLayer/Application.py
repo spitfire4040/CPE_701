@@ -5,6 +5,8 @@ import os
 import sys
 import thread
 import time
+import base64
+import os.path
 from random import randint
 
 # create paths to folders
@@ -22,6 +24,34 @@ import Routing
 import Transport
 
 
+# initialize SID list
+SID_LIST = {}
+CONN_LIST = {}
+
+# make node global
+node = None
+
+
+# function: list_service_points
+def list_service_points():
+	print "SID_LIST: ", SID_LIST
+	raw_input("Press enter to continue...")
+
+
+# function: encode_file
+def encode_file(myfile, SID):
+	with open(myfile, "rb") as image_file:
+		encoded_string = base64.b64encode(image_file.read())
+	return encoded_string
+
+
+# function: decode_file
+def decode_file(myfile, SID):
+	out = open(myfile, "wb")
+	out.write(encoded_string.decode('base64'))
+	out.close()
+
+
 # function: print usage (bad input)
 def PrintUsage ():
   print('\nUsage: python <filename> <nid> <itc script>')
@@ -29,54 +59,59 @@ def PrintUsage ():
 
 # function menu
 def menu():
-	print "1.  start_service(P):"
-	print "2.  stop_service(S):"
-	print "3.  connect(Y, S, W):"
-	print "4.  close(C):"
-	print "5.  download(C, F):"
-	print "6.  set_garbler(L, C):"
-	print "7.  route_table():"
-	print "8.  link_down(N):"
-	print "9.  link_up(N):"
-	print "Enter 'exit' to terminate program"
-	raw_input("Press enter to continue...")
+	print "CHOOSE THE NUMBER OF YOUR SELECTION"
+	print "-----------------------------------"
+	print "1.   start service"
+	print "2.   stop service:"
+	print "3.   list service points"
+	print "4.   connect"
+	print "5.   close"
+	print "6.   download"
+	print "7.   set garbler"
+	print "8.   route table"
+	print "9.   link down"
+	print "10.  link up"
+	print "11.  send text message"
+	print "12.  print status"
+	print "13.  terminate program"
+	print ' '
 
 
 # function: start service
 def start_service(P):
-	pass
+	print P
+	if (int(P) < 1):
+		os.system('clear')
+		print "start_service(0) - Failure: MaxCons=" + P + " bad argument"
+	else:
+		SID = randint(101, 999)
+		SID_LIST[str(SID)] = (P,[])
+		os.system('clear')
+		print "start_service(" + str(P) + ") - Success: SID=" + str(SID) + ", MaxCons=" + str(P)
+	raw_input("Press enter to continue...")
 
-
-
-
-
-
-	"""
-	This command establishes a service point at the local node, say X. The
-	command returns a Service ID (SID) S, that is unique for each service point of node X. Other
-	nodes can connect to S, and download files from that service point. The argument P is the
-	maximum number of open connections that S can accept; requests for more than P connections
-	are rejected.
-	Examples of resulting messages:
-	start_service(3) - Success: SID=123, MaxCons=3
-	start_service(0) - Failure: MaxCons=0 bad argument 
-	"""
 
 # function: stop service
 def stop_service(S):
-	pass
+	if (str(S)) in SID_LIST:
+		del SID_LIST[str(S)]
+		print "stop_service(" + str(S) + ") - Success: SID=" + str(S) + " is terminated"
+	else:
+		print "stop_service(" + str(S) + ") - Failure: SID=" + str(S) + " does not exist"
+	raw_input("Press enter to continue...")
 
-	"""
-	This command terminates the service point with SID S at the local node. Any
-	open connections at that SID are aborted.
-	Examples of resulting messages:
-	"stop_service(123) - Success: SID=123 is terminated"
-	print"stop_service(200) - Failure: SID=200 does not exist"
-	"""
 
 # function: connect
 def connect(Y, S, W):
-	pass
+	global node
+
+	dest_nid = Y
+	SID = 22
+	data = str(S) + '@@' + str(W)
+
+	Transport.l4_sendto(node, dest_nid, SID, data)
+
+
 
 	"""
 	This command establishes a connection from the local node, say X, to the
@@ -101,10 +136,17 @@ def close(C):
 	"""
 
 # function: download
-def download(node, parameters):
-	params = parameters
-	C = params[0]
-	F = params[1]
+def download(C, F):
+	global node
+	print 'download ' + str(C) + ' ' + F
+
+	"""
+	dest_nid = raw_input("Enter NID of target: ")
+	data = raw_input("Enter Text Message: ")
+	SID = 100
+	Transport.l4_sendto(node, dest_nid, SID, data)
+	"""
+
 
 
 
@@ -145,17 +187,14 @@ def set_garbler(L, C):
 
 
 # function: route table
-def route_table(node):
+def route_table():
+	global node
 	Routing.route_table(node)
-
-	"""
-	This command prints the local routing table at the node. It must show the
-	corresponding next-hop and the cost of the route in terms of number of hops.
-	"""
 
 
 # function: link down
-def link_down(node, N):
+def link_down(N):
+	global node
 
 	# search links list for attributes
 	links = node.GetLinks()
@@ -195,7 +234,8 @@ def link_down(node, N):
 
 
 # function: link up
-def link_up(node, N):
+def link_up(N):
+	global node
 
 	# search links list for attributes
 	links = node.GetLinks()
@@ -233,17 +273,51 @@ def link_up(node, N):
 		print "Failure: link to node-" + N + " does not exist"
 		raw_input("press enter to continue...")
 
-
+#****************************************************************************
 # function: l5_recvfrom (incoming message from layer 4)
-def l5_recvfrom(data):
-	print '\n'
-	os.system('clear')
-	print data
-	print "Enter A Command, or 'menu' to see all options: "
+def l5_recvfrom(SID, data, source_nid):
+	global node
 
+	# if incoming message is a text message
+	if (SID == 100):
+		print '\n'
+		os.system('clear')
+		print data
+		print ("Press enter to continue... ")
+
+	# if incoming message is a connection request
+	elif (SID == 22):
+		data = data.split('@@')
+		sid = data[0]
+		window = data[1]
+		
+		print ("Press enter to continue... ")
+
+		"""
+		if ((sid in SID_LIST) and (SID_LIST[sid][0] > length):
+			CID = randint(1001, 9999)
+			SID_LIST[sid][1].append(CID)
+			CONN_LIST[str(CID)] = source_nid
+			data = str(CID)
+			dest_nid = source_nid
+			SID = 23
+		else:
+			SID = 100
+			dest_nid = source_nid
+			data = "connect - Failure: DestNode=" + str(node.GetNID()) + " rejected connection request"
+
+		Transport.l4_sendto(node, dest_nid, SID, data)
+		"""
+	else:
+		# incoming message is a file transfer, write to disk
+		#decode_file(data, SID)
+		pass
+#***************************************************************************
 
 # main function
 def main (argv):
+	global node
+
 	#check for proper input
  	if len(sys.argv) != 3:
 		PrintUsage()
@@ -258,29 +332,20 @@ def main (argv):
 	#start listen threads
 	Link.start_listener(node)
 
-
 	# begin loop
 	while(run == 1):
 
 		# clear screen
 		os.system('clear')
 
+		# print menu
+		menu()
+
 		# prompt for input
-		message = raw_input("Enter A Command, or 'menu' to see all options: ")
-
-		# for testing node at physical layer
-		if (message == "PrintStatus"):
-			node.PrintStatus()
-
-		# for testing, send simple text message
-		if (message == "send message"):
-			dest_nid = raw_input("Enter NID of target: ")
-			data = raw_input("Enter Message: ")
-			Transport.l4_sendto(node, dest_nid, data)
+		message = raw_input("Enter your selection: ")
 
 		# print menu to screen
-		if (message == "MENU") or (message == "Menu") or (message == "menu"):
-			menu()
+		#if (message == "MENU") or (message == "Menu") or (message == "menu"):
 
 		# start new service
 		if (message == '1'):
@@ -292,46 +357,61 @@ def main (argv):
 			S = raw_input("Enter the Service ID of the node you wish to stop service with: ")
 			stop_service(S)
 
-		# connect to node x
+		# list service points
 		if (message == '3'):
+			list_service_points()
+
+		# connect to node x
+		if (message == '4'):
 			Y = raw_input("Enter the node you would like to connect to: ")
 			S = raw_input("Enter the SID of the node: ")
-			W = raw_input("Enter a value between 1-5 to set the window for packets in flight")
+			W = raw_input("Enter a value between 1-5 to set the window for packets in flight: ")
 			connect(Y, S, W)
 
 		# close connection with node x
-		if (message == '4'):
+		if (message == '5'):
 			C = raw_input("Enter the CID of the connection you would like to close: ")
 			close(C)
 
 		# download from node x
-		if (message == '5'):
+		if (message == '6'):
 			C = raw_input("Enter the CID of the peer from whom you would like to download: ")
 			F = raw_input("Enter the name of the file you would like to download: ")
 			thread.start_new_thread(download, (node,(C,F)))
 
 		# set garbler probability
-		if (message == '6'):
+		if (message == '7'):
 			L = raw_input("Set the probability of packet loss (1-100): ")
 			C = raw_input("Set the probability of packet corruption (1-100): ")
 			set_garbler(L, C)
 
 		# display next hop data
-		if (message == '7'):
-			route_table(node)
+		if (message == '8'):
+			route_table()
 
 		# down link to node x
-		if (message == '8'):
+		if (message == '9'):
 			N = raw_input("Enter the node with whom you would like to down a link: ")
-			link_down(node, N)
+			link_down(N)
 
 		# up link to node x
-		if (message == '9'):
+		if (message == '10'):
 			N = raw_input("Enter the node with whom you would like to up a link: ")
-			link_up(node, N)
+			link_up(N)
+
+		# for testing, send simple text message
+		if (message == "11"):
+			dest_nid = raw_input("Enter NID of target: ")
+			data = raw_input("Enter Text Message: ")
+			SID = 100
+			Transport.l4_sendto(node, dest_nid, SID, data)
+
+		# for testing node at physical layer
+		if (message == "12"):
+			node.PrintStatus()
 
 		# exit program
-		if (message == 'Exit') or (message == 'Exit') or (message == 'exit'):
+		if (message == '13') or (message == 'Exit') or (message == 'exit'):
 			run = 0
 
   

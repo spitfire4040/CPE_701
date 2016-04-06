@@ -191,6 +191,7 @@ class Node(object):
   
   # print status
   def PrintStatus(self):
+    os.system('clear')
     print "Status of this node"
     print "-------------------"
     print "NID: ", (self.nid)

@@ -1,9 +1,12 @@
 #!/usr/bin/python
 
-import errno      # For errors!
 import socket     # Low-level networking interface.
 import sys        # Basic system functionality.
 import threading  # Higher-level threading interface.
+import json
+import hashlib
+import os
+import time
 
 sys.path.append('../PhysicalLayer')
 sys.path.append('../LinkLayer')
@@ -17,10 +20,68 @@ import Network
 import Routing
 import Application
 
-def l4_sendto(node, dest_nid, data):
-	segment = data
-	Network.l3_sendto(node, dest_nid, segment)
+def l4_sendto(node, dest_nid, SID, data):
+
+	# get port table for this node and set values for destination target
+	PortTable = node.GetPortTable()
+	for link in PortTable:
+		info = PortTable[link]
+
+		if info[0] == dest_nid:
+			dest_port = info[2]
+
+	# get md5 hash of data for checksum
+	m = hashlib.md5()
+	m.update(data)
+	checksum = m.hexdigest()
+
+	print checksum
+
+
+	# build datagram
+	frame = {}
+	frame['SID'] = SID
+	frame['source_nid'] = node.GetNID()
+	frame['source_port'] = node.GetPort()
+	frame['destination_nid'] = dest_nid
+	frame['destination_port'] = dest_port
+	frame['sequence_number'] = 1
+	frame['ack_number'] = 1
+	frame['window_size'] = 15
+	frame['checksum'] = checksum
+	frame['data'] = data
+
+	# encode payload
+	payload = json.dumps(frame)
+
+	Network.l3_sendto(node, dest_nid, payload)
+
 
 def l4_recvfrom(segment):
-	data = segment
-	Application.l5_recvfrom(data)
+
+	frame = json.loads(segment)
+
+	SID = frame['SID']
+	source_nid = frame['source_nid']
+	source_port = frame['source_port']
+	dest_nid = frame['destination_nid']
+	dest_port = frame['destination_port']
+	sequence_number = frame['sequence_number']
+	ack_number = frame['ack_number']
+	window_size = frame['window_size']
+	checksum = frame['checksum']
+	data = frame['data']
+
+	# get md5 hash of data for checksum
+	m = hashlib.md5()
+	m.update(data)
+	test = m.hexdigest()
+
+	# compare checksums
+	if (checksum == test):
+		Application.l5_recvfrom(SID, data, source_nid)
+	else:
+		data = "message was corrupted"
+		Application.l5_recvfrom(SID, data, source_nid)
+
+

@@ -30,11 +30,14 @@ def l3_sendto(node, dest_nid, segment):
   # set sequence total (fix later)
   sequence_total = 1
 
-  # set ttl (fix later)
-  ttl = 10
+  # set ttl
+  ttl = 20
+
+  # set mtu
+  mtu = 1000
 
   # set length of data segment
-  data_length = len(segment)
+  #data_length = len(segment)
 
   # get port table for this node and set values for destination target
   PortTable = node.GetPortTable()
@@ -55,11 +58,11 @@ def l3_sendto(node, dest_nid, segment):
   datagram['destination_hostname'] = dest_hostname
   datagram['destination_nid'] = dest_nid
   datagram['destination_port'] = dest_port
-  datagram['sequence_number'] = 1
-  datagram['total_sequence_numbers'] = 1
-  datagram['ttl'] = 15
-  datagram['mtu'] = 1000
-  datagram['length'] = data_length
+  #datagram['sequence_number'] = 1
+  #datagram['total_sequence_numbers'] = 1
+  datagram['ttl'] = ttl
+  datagram['mtu'] = mtu
+  #datagram['length'] = data_length
   datagram['payload'] = segment
   datagram['last_nid'] = node.GetNID()
 
@@ -92,5 +95,11 @@ def l3_recvfrom(node, message):
 
   # if its not for this node, send it back down to layer 2
   else:
-    datagram = json.dumps(data)
-    Link.l2_sendto(node, last_nid, dest_nid, datagram)
+    ttl = data['ttl']
+    new_ttl = (ttl - 1)
+    data['ttl'] = new_ttl
+    if (data['ttl'] > 0):
+      datagram = json.dumps(data)
+      Link.l2_sendto(node, last_nid, dest_nid, datagram)
+    else:
+      pass

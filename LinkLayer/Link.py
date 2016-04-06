@@ -81,9 +81,33 @@ def l2_sendto(node, last_nid, dest_nid, payload):
   if (LOSS_FLAG == False):    
     try:
       if (CORRUPT_FLAG == True):
-        data = json.loads(payload)
-        data['payload'] = (data['payload'] + 'abcde')
-        payload = json.dumps(data)
+
+        # unpack payload from layer 3
+        datagram = json.loads(payload)
+
+        # get segment from datagram (l3)
+        frame = datagram['payload']
+
+        # unpack segment (packed at l4)
+        segment = json.loads(frame)
+
+        # get data from frame (l4)
+        message = segment['data']
+
+        # append message
+        message = (message + 'abcde')
+
+        # put message back in segment
+        segment['data'] = message
+
+        # repack segment (frame)
+        frame = json.dumps(segment)
+
+        # put frame back in datagram
+        datagram['payload'] = frame
+
+        # repack datagram (payload)
+        payload = json.dumps(datagram)
 
       # get link table and find links for this node
       links = node.GetLinkTable()
