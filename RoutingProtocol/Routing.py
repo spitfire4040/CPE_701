@@ -181,8 +181,4 @@ def next_hop(node, last_nid):
 			if link1_flag==True and link2_flag==False:
 				metrix = metrix1
 				nh = links[0][0]
-<<<<<<< HEAD
 	return nh
-=======
-	return nh
->>>>>>> 7809457598b889252b19a49fcab0d4f746554212
