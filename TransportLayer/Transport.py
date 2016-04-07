@@ -20,6 +20,7 @@ import Network
 import Routing
 import Application
 
+
 def l4_sendto(node, dest_nid, SID, data):
 
 	# get port table for this node and set values for destination target
@@ -34,8 +35,6 @@ def l4_sendto(node, dest_nid, SID, data):
 	m = hashlib.md5()
 	m.update(data)
 	checksum = m.hexdigest()
-
-	print checksum
 
 
 	# build datagram
@@ -79,9 +78,9 @@ def l4_recvfrom(segment):
 
 	# compare checksums
 	if (checksum == test):
-		Application.l5_recvfrom(SID, data, source_nid)
+		Application.l5_recvfrom(SID, data, source_nid, dest_nid)
 	else:
 		data = "message was corrupted"
-		Application.l5_recvfrom(SID, data, source_nid)
+		Application.l5_recvfrom(SID, data, source_nid, dest_nid)
 
 

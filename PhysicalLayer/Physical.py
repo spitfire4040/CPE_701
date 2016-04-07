@@ -4,6 +4,8 @@
 import sys
 import os
 
+node = None
+
 
 # function: InitializeTopology
 def InitializeTopology (nid, itc):

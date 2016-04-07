@@ -23,18 +23,20 @@ import Network
 import Routing
 import Transport
 
+# initialize node object in physical layer
+node = Physical.InitializeTopology(sys.argv[1], sys.argv[2])
 
 # initialize SID list
 SID_LIST = {}
 CONN_LIST = {}
 
-# make node global
-node = None
-
-
+		
 # function: list_service_points
 def list_service_points():
+	global SID_LIST, CONN_LIST
+
 	print "SID_LIST: ", SID_LIST
+	print "CONN_LIST: ", CONN_LIST
 	raw_input("Press enter to continue...")
 
 
@@ -79,7 +81,8 @@ def menu():
 
 # function: start service
 def start_service(P):
-	print P
+	global SID_LIST, CONN_LIST
+
 	if (int(P) < 1):
 		os.system('clear')
 		print "start_service(0) - Failure: MaxCons=" + P + " bad argument"
@@ -93,6 +96,8 @@ def start_service(P):
 
 # function: stop service
 def stop_service(S):
+	global SID_LIST, CONN_LIST
+
 	if (str(S)) in SID_LIST:
 		del SID_LIST[str(S)]
 		print "stop_service(" + str(S) + ") - Success: SID=" + str(S) + " is terminated"
@@ -103,11 +108,12 @@ def stop_service(S):
 
 # function: connect
 def connect(Y, S, W):
-	global node
-
+	global node, SID_LIST, CONN_LIST
 	dest_nid = Y
+	sid = S
+	window = W
 	SID = 22
-	data = str(S) + '@@' + str(W)
+	data = sid + '@@' + window
 
 	Transport.l4_sendto(node, dest_nid, SID, data)
 
@@ -125,6 +131,7 @@ def connect(Y, S, W):
 
 #function: close
 def close(C):
+	global SID_LIST, CONN_LIST
 	pass
 
 	"""
@@ -137,7 +144,7 @@ def close(C):
 
 # function: download
 def download(C, F):
-	global node
+	global node, SID_LIST, CONN_LIST
 	print 'download ' + str(C) + ' ' + F
 
 	"""
@@ -194,7 +201,7 @@ def route_table():
 
 # function: link down
 def link_down(N):
-	global node
+	global Node
 
 	# search links list for attributes
 	links = node.GetLinks()
@@ -273,10 +280,14 @@ def link_up(N):
 		print "Failure: link to node-" + N + " does not exist"
 		raw_input("press enter to continue...")
 
-#****************************************************************************
 # function: l5_recvfrom (incoming message from layer 4)
-def l5_recvfrom(SID, data, source_nid):
-	global node
+def l5_recvfrom(SID, data, source_nid, dest_nid):
+	global node, SID_LIST, CONN_LIST
+
+	print 'SID = ', SID
+	print 'data = ', data
+	print 'source_nid = ', source_nid
+	print 'dest_nid = ', dest_nid
 
 	# if incoming message is a text message
 	if (SID == 100):
@@ -285,38 +296,33 @@ def l5_recvfrom(SID, data, source_nid):
 		print data
 		print ("Press enter to continue... ")
 
-	# if incoming message is a connection request
+	# if incoming message is a text message
 	elif (SID == 22):
 		data = data.split('@@')
 		sid = data[0]
 		window = data[1]
-		
+		SID = 23
+		CID = randint(1000, 9999)
+		data = str(sid) + "@@" + str(CID) + "@@" + str(window)
+		Transport.l4_sendto(node, dest_nid, SID, data)
 		print ("Press enter to continue... ")
 
-		"""
-		if ((sid in SID_LIST) and (SID_LIST[sid][0] > length):
-			CID = randint(1001, 9999)
-			SID_LIST[sid][1].append(CID)
-			CONN_LIST[str(CID)] = source_nid
-			data = str(CID)
-			dest_nid = source_nid
-			SID = 23
-		else:
-			SID = 100
-			dest_nid = source_nid
-			data = "connect - Failure: DestNode=" + str(node.GetNID()) + " rejected connection request"
+	# if incoming message is a connection response
+	if (SID == 23):
+		print '\n'
+		os.system('clear')
+		print data
+		print SID_LIST
+		print CONN_LIST
+		print ("Press enter to continue... ")
 
-		Transport.l4_sendto(node, dest_nid, SID, data)
-		"""
 	else:
-		# incoming message is a file transfer, write to disk
-		#decode_file(data, SID)
 		pass
-#***************************************************************************
+
 
 # main function
 def main (argv):
-	global node
+	global node, SID_LIST, CONN_LIST
 
 	#check for proper input
  	if len(sys.argv) != 3:
@@ -327,7 +333,10 @@ def main (argv):
 		run = 1
 
   	# initialize node object in physical layer
-  	node = Physical.InitializeTopology(sys.argv[1], sys.argv[2])
+  	#node = Physical.InitializeTopology(sys.argv[1], sys.argv[2])
+
+  	# wait for node to propagate
+  	time.sleep(2)
 
 	#start listen threads
 	Link.start_listener(node)

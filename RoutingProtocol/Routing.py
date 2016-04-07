@@ -117,7 +117,7 @@ def next_hop(node, last_nid):
 
 	links = node.GetLinks()
 	tabl = node.linkTable
-	print "in routing", last_nid;
+	#print "in routing", last_nid;
 	for k in tabl.keys():
 		if (k==int(last_nid)):
 			metrix1 = 1

@@ -58,11 +58,8 @@ def l3_sendto(node, dest_nid, segment):
   datagram['destination_hostname'] = dest_hostname
   datagram['destination_nid'] = dest_nid
   datagram['destination_port'] = dest_port
-  #datagram['sequence_number'] = 1
-  #datagram['total_sequence_numbers'] = 1
   datagram['ttl'] = ttl
   datagram['mtu'] = mtu
-  #datagram['length'] = data_length
   datagram['payload'] = segment
   datagram['last_nid'] = node.GetNID()
 
