@@ -8,23 +8,16 @@ sys.path.append('../LinkLayer')
 import Physical
 import Link
 
-# function: route table
 
-"""
-This command prints the local routing table at the node. It must show the
-corresponding next-hop and the cost of the route in terms of number of hops.
-"""
-
-# Hello Sifat! The flags are now working, can they be used to dynamically determine the next hop?
-# I set them as global, and they are called when the function is called (link1_flag, link2_flag)
 
 # initialize global variables
-link1_flag = ''
-link2_flag = ''
+#link1_flag = ''
+#link2_flag = ''
 
+# function: route table
 def route_table(node):
 	# include global variables
-	global link1_flag, link2_flag
+	#global link1_flag, link2_flag
 
 	# set state of link flags
 	link1_flag = node.GetUpFlagL1()
@@ -98,18 +91,15 @@ def route_table(node):
 			print '{0:^14}{1:^21}{2:^3}\n'.format(k, metrix, nhop)
 
 	#print link2[0]
-	# print state of flags (for testing)
-	print "Link 1 flag is ", link1_flag
-	print "Link 2 flag is ", link2_flag
-
 
 	raw_input("press enter to continue...")
 
 	#pass
 
+# function: next_hop
 def next_hop(node, last_nid):
 	# include global variables
-	global link1_flag, link2_flag
+	#global link1_flag, link2_flag
 
 	# set state of link flags
 	link1_flag = node.GetUpFlagL1()
@@ -172,13 +162,13 @@ def next_hop(node, last_nid):
 				metrix = metrix2
 				nh = links[1][0]
 				print nh
-			if link1_flag==False and link2_flag==False:
-				metrix = "inf"
-				nh = "not reachable"
-			if link1_flag==False and link2_flag==True:
-				metrix = metrix2
-				nh = links[1][0]
-			if link1_flag==True and link2_flag==False:
-				metrix = metrix1
-				nh = links[0][0]
+	if link1_flag==False and link2_flag==False:
+		metrix = "inf"
+		nh = "not reachable"
+	if link1_flag==False and link2_flag==True:
+		metrix = metrix2
+		nh = links[1][0]
+	if link1_flag==True and link2_flag==False:
+		metrix = metrix1
+		nh = links[0][0]
 	return nh

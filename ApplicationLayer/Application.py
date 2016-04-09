@@ -6,6 +6,7 @@ import sys
 import thread
 import time
 import base64
+import binascii
 import os.path
 from random import randint
 
@@ -143,9 +144,14 @@ def close(C):
 	"""
 
 # function: download
-def download(C, F):
+def download(N, F):
 	global node, SID_LIST, CONN_LIST
-	print 'download ' + str(C) + ' ' + F
+	dest_nid = N
+	filename = F
+	SID = 32 #request file
+	data = filename
+
+	Transport.l4_sendto(node, dest_nid, SID, data)
 
 	"""
 	dest_nid = raw_input("Enter NID of target: ")
@@ -195,7 +201,7 @@ def set_garbler(L, C):
 
 # function: route table
 def route_table():
-	global node
+	global node, SID_LIST, CONN_LIST
 	Routing.route_table(node)
 
 
@@ -284,19 +290,18 @@ def link_up(N):
 def l5_recvfrom(SID, data, source_nid, dest_nid):
 	global node, SID_LIST, CONN_LIST
 
-	print 'SID = ', SID
-	print 'data = ', data
-	print 'source_nid = ', source_nid
-	print 'dest_nid = ', dest_nid
+	print "current nid: ", node.GetNID()
+	print "dest_nid: ", dest_nid
+	print "source_nid: ", source_nid
 
 	# if incoming message is a text message
 	if (SID == 100):
 		print '\n'
 		os.system('clear')
-		print data
+		print "data: ", data
 		print ("Press enter to continue... ")
 
-	# if incoming message is a text message
+	# if incoming message is a connection request
 	elif (SID == 22):
 		data = data.split('@@')
 		sid = data[0]
@@ -315,6 +320,47 @@ def l5_recvfrom(SID, data, source_nid, dest_nid):
 		print SID_LIST
 		print CONN_LIST
 		print ("Press enter to continue... ")
+
+	# if incoming message is a connection response
+	if (SID == 32):
+		print '\n'
+		filename = data
+		os.system('clear')
+		exists = os.path.isfile(filename)
+		if (exists == True):
+			print ("yup, it's here. I'll send it!")
+
+			temp = []
+			f = open(filename)
+			cf = f.read()
+			f.close()
+			string = base64.b64encode(str(cf))
+			newstring = bin(int(binascii.hexlify(string), 16))
+			dest_nid = source_nid
+			source_nid = node.GetNID()
+			SID = 33
+			data = newstring
+			Transport.l4_sendto(node, dest_nid, SID, data)
+
+		else:
+			print ("nope, it's not here")
+			dest_nid = source_nid
+			source_nid = node.GetNID()
+			SID = 100
+			data = "file " + filename + " does not exist, sorry!"
+			Transport.l4_sendto(node, dest_nid, SID, data)
+
+		print ("Press enter to continue... ")
+
+		if (SID == 33):
+			buf = ''
+			if ( data != 'end'):
+				buf = buf + data
+			else:
+				t = open("downloaded.png", "w+")
+				convert = base64.b64decode(buf)
+				t.write(convert)
+				t.close()
 
 	else:
 		pass
@@ -384,9 +430,9 @@ def main (argv):
 
 		# download from node x
 		if (message == '6'):
-			C = raw_input("Enter the CID of the peer from whom you would like to download: ")
+			N = raw_input("Enter the NID of the peer from whom you would like to download: ")
 			F = raw_input("Enter the name of the file you would like to download: ")
-			thread.start_new_thread(download, (node,(C,F)))
+			thread.start_new_thread(download, (N,F))
 
 		# set garbler probability
 		if (message == '7'):

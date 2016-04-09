@@ -21,7 +21,30 @@ import Routing
 import Application
 
 
+def chunkstring(string, length):
+	return (string[0+i:length+i] for i in range(0, len(string), length))
+
+
 def l4_sendto(node, dest_nid, SID, data):
+
+	# if sending a file, check size
+	if SID == 33:
+		os.system('clear')
+		size = sys.getsizeof(data)
+		print "file size: ", size
+		print data
+
+		mylist = list(chunkstring(data, 20000))
+		listlength = len(mylist)
+
+		for x in range(0, listlength):
+			print mylist[x]
+			print ' '
+
+
+		time.sleep(5)
+
+
 
 	# get port table for this node and set values for destination target
 	PortTable = node.GetPortTable()

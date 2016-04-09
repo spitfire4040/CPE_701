@@ -127,8 +127,11 @@ def l2_sendto(node, last_nid, dest_nid, payload):
       else:
         #target = n1
         target = Routing.next_hop(node, dest_nid)
+        if target != n1 and target != n2:
+          target = n1
 
       # get links for this node
+
       links = node.GetLinks()
       link1 = links[0]
       link2 = links[1]
@@ -142,12 +145,16 @@ def l2_sendto(node, last_nid, dest_nid, payload):
         dest_hostname = link2[1]
         dest_port = link2[2]
 
+
+
       # create udp socket and send
       sock = socket.socket(socket.AF_INET, # Internet
                    socket.SOCK_DGRAM) # UDP
       sock.sendto(payload, (dest_hostname, int(dest_port)))
+
     except:
       print "couldn't send message"
+
   else:
     pass
 
@@ -232,13 +239,13 @@ def timer(node):
   while (1):
 
     # first wait 10 seconds, then set flags to false
-    for x in range(10):
+    for x in range(4):
       time.sleep(1)
     link1_flag = False
     link2_flag = False
 
     # now check for true for 5 second period
-    for x in range(5):
+    for x in range(2):
       time.sleep(1)
 
     # if true flag found, set neighbor 1 up flag
