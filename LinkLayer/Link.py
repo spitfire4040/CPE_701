@@ -74,6 +74,9 @@ class MyUDPHandler(SocketServer.BaseRequestHandler):
 def l2_sendto(node, last_nid, dest_nid, payload):
   global mynode, nid, LOSS_FLAG, CORRUPT_FLAG, L, C
 
+  # open log file
+  f = open("log.txt", "a")
+
   # call garbler function each time...
   garbler()
 
@@ -127,8 +130,9 @@ def l2_sendto(node, last_nid, dest_nid, payload):
       else:
         #target = n1
         target = Routing.next_hop(node, dest_nid)
-        if target != n1 and target != n2:
-          target = n1
+        f.write("next hop: " + str(target) + "\n")
+        #if target != n1 and target != n2:
+          #target = n1
 
       # get links for this node
 
@@ -163,6 +167,8 @@ def l2_sendto(node, last_nid, dest_nid, payload):
   CORRUPT_FLAG = False
   L = 0
   C = 0
+
+  f.close()
 
 
 # function: start listener

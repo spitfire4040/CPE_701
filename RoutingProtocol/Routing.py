@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys
+import os
 
 sys.path.append('../PhysicalLayer')
 sys.path.append('../LinkLayer')
@@ -11,13 +12,13 @@ import Link
 
 
 # initialize global variables
-#link1_flag = ''
-#link2_flag = ''
+link1_flag = ''
+link2_flag = ''
 
 # function: route table
 def route_table(node):
 	# include global variables
-	#global link1_flag, link2_flag
+	global link1_flag, link2_flag
 
 	# set state of link flags
 	link1_flag = node.GetUpFlagL1()
@@ -92,14 +93,14 @@ def route_table(node):
 
 	#print link2[0]
 
-	raw_input("press enter to continue...")
+	raw_input("Press enter to continue...")
 
 	#pass
 
 # function: next_hop
 def next_hop(node, last_nid):
 	# include global variables
-	#global link1_flag, link2_flag
+	global link1_flag, link2_flag
 
 	# set state of link flags
 	link1_flag = node.GetUpFlagL1()

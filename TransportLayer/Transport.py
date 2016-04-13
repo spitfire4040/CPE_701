@@ -105,5 +105,3 @@ def l4_recvfrom(segment):
 	else:
 		data = "message was corrupted"
 		Application.l5_recvfrom(SID, data, source_nid, dest_nid)
-
-

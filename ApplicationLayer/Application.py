@@ -200,8 +200,8 @@ def set_garbler(L, C):
 
 
 # function: route table
-def route_table():
-	global node, SID_LIST, CONN_LIST
+def route_table(node):
+	os.system('clear')
 	Routing.route_table(node)
 
 
@@ -353,14 +353,7 @@ def l5_recvfrom(SID, data, source_nid, dest_nid):
 		print ("Press enter to continue... ")
 
 		if (SID == 33):
-			buf = ''
-			if ( data != 'end'):
-				buf = buf + data
-			else:
-				t = open("downloaded.png", "w+")
-				convert = base64.b64decode(buf)
-				t.write(convert)
-				t.close()
+			print "data: ", data
 
 	else:
 		pass
@@ -442,7 +435,7 @@ def main (argv):
 
 		# display next hop data
 		if (message == '8'):
-			route_table()
+			route_table(node)
 
 		# down link to node x
 		if (message == '9'):
