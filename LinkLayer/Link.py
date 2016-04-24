@@ -62,8 +62,10 @@ class MyUDPHandler(SocketServer.BaseRequestHandler):
         # set link flags
         if message[1] == link1_port:
           link1_flag = True
+          #mynode.SetUpFlagL1(True)
         if message[1] == link2_port:
           link2_flag = True
+          #mynode.SetUpFlagL2(True)
 
       # not hello, forward to network layer
       else:
@@ -131,8 +133,6 @@ def l2_sendto(node, last_nid, dest_nid, payload):
         #target = n1
         target = Routing.next_hop(node, dest_nid)
         f.write("next hop: " + str(target) + "\n")
-        #if target != n1 and target != n2:
-          #target = n1
 
       # get links for this node
 
@@ -219,22 +219,24 @@ def receiver():
 # function: hello (alive)
 def hello():
   # global variables
-  global hostname, port, link1_hostname, link1_port, link2_hostname, link2_port
+  global hostname, port, link1_hostname, link1_port, link2_hostname, link2_port, inhibit1, inhibit2
 
   # eternal loop
   while (1):
 
-    # open socket and send to neighbor 1
-    sock = socket.socket(socket.AF_INET, # Internet
-                   socket.SOCK_DGRAM) # UDP
-    sock.sendto("hhhhh" + ' ' + port, (link1_hostname, int(link1_port)))
-    time.sleep(1)
+    if (inhibit1 == False):
+      # open socket and send to neighbor 1
+      sock = socket.socket(socket.AF_INET, # Internet
+                     socket.SOCK_DGRAM) # UDP
+      sock.sendto("hhhhh" + ' ' + port, (link1_hostname, int(link1_port)))
+      time.sleep(1)
 
-    # open socket and send to neighbor 2
-    sock = socket.socket(socket.AF_INET, # Internet
-                   socket.SOCK_DGRAM) # UDP
-    sock.sendto("hhhhh" + ' ' + port, (link2_hostname, int(link2_port)))
-    time.sleep(1)
+    if (inhibit2 == False):
+      # open socket and send to neighbor 2
+      sock = socket.socket(socket.AF_INET, # Internet
+                     socket.SOCK_DGRAM) # UDP
+      sock.sendto("hhhhh" + ' ' + port, (link2_hostname, int(link2_port)))
+      time.sleep(1)
 
 
 # function: timer (for hello)
@@ -273,9 +275,6 @@ def timer(node):
     # check for inhibit
     if inhibit2 == True:
       link2.SetUpFlagL2(False)
-
-    #print "up flag 1: ", node.GetUpFlagL1()
-    #print "up flag 2: ", node.GetUpFlagL2()
 
 
 # function: inhibit
@@ -323,3 +322,18 @@ def garbler():
   corruptList = random.sample(range(1, 101), int(C))
   if (50 in corruptList):
     CORRUPT_FLAG = True
+
+def routing_flag1():
+  global link1_flag, link2_flag
+
+  if link1_flag == True:
+    return True
+  else:
+    return False
+
+
+def routing_flag2():
+  if link2_flag == True:
+    return True
+  else:
+    return False

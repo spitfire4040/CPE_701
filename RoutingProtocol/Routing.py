@@ -9,8 +9,6 @@ sys.path.append('../LinkLayer')
 import Physical
 import Link
 
-
-
 # initialize global variables
 link1_flag = ''
 link2_flag = ''
@@ -21,8 +19,10 @@ def route_table(node):
 	global link1_flag, link2_flag
 
 	# set state of link flags
-	link1_flag = node.GetUpFlagL1()
-	link2_flag = node.GetUpFlagL2()
+	#link1_flag = node.GetUpFlagL1()
+	#link2_flag = node.GetUpFlagL2()
+	link1_flag = Link.routing_flag1
+	link2_flag = Link.routing_flag2
 
 	links = node.GetLinks()
 	tabl = node.linkTable
@@ -31,7 +31,8 @@ def route_table(node):
 	for k in tabl.keys():
 		if (k!=int(node.nid)):
 			metrix1 = 1
-			tn1 = int(node.nid)
+			#tn1 = int(node.nid)
+			tn1 = node.GetNID()
 			tn2 = links[0][0]
 			while tn2!=k:				
 				for key, value in tabl.items():
@@ -53,9 +54,10 @@ def route_table(node):
 				if metrix1>10:
 					break
 			metrix2 = 1
-			tn1 = int(node.nid)
+			#tn1 = int(node.nid)
+			tn1 = node.GetNID()
 			tn2 = links[1][0]
-			while tn2!=k:				
+			while tn2 != k:				
 				for key, value in tabl.items():
 					if key==tn2:
 						if len(filter(bool, value))==1:
@@ -103,25 +105,28 @@ def next_hop(node, last_nid):
 	global link1_flag, link2_flag
 
 	# set state of link flags
-	link1_flag = node.GetUpFlagL1()
-	link2_flag = node.GetUpFlagL2()
+	#link1_flag = node.GetUpFlagL1()
+	#link2_flag = node.GetUpFlagL2()
+	link1_flag = Link.routing_flag1
+	link2_flag = Link.routing_flag2
 
 	links = node.GetLinks()
 	tabl = node.linkTable
 	#print "in routing", last_nid;
 	for k in tabl.keys():
-		if (k==int(last_nid)):
+		if (k == int(last_nid)):
 			metrix1 = 1
-			tn1 = int(node.nid)
+			#tn1 = int(node.nid)
+			tn1 = node.GetNID()
 			tn2 = links[0][0]
-			while tn2!=k:				
+			while tn2 != k:				
 				for key, value in tabl.items():
-					if key==tn2:
-						if len(filter(bool, value))==1:
+					if key == tn2:
+						if len(filter(bool, value)) == 1:
 							metrix1 = 100
 							break
 						else:
-							if value[0]==tn1:
+							if value[0] == tn1:
 								tn1 = tn2
 								tn2 = value[1]
 								metrix1 += 1
@@ -131,19 +136,20 @@ def next_hop(node, last_nid):
 								metrix1 += 1
 							#print tn2
 						break
-				if metrix1>10:
+				if metrix1 > 10:
 					break
 			metrix2 = 1
-			tn1 = int(node.nid)
+			#tn1 = int(node.nid)
+			tn1 = node.GetNID()
 			tn2 = links[1][0]
-			while tn2!=k:				
+			while tn2 != k:				
 				for key, value in tabl.items():
-					if key==tn2:
-						if len(filter(bool, value))==1:
+					if key == tn2:
+						if len(filter(bool, value)) == 1:
 							metrix2 = 100
 							break
 						else:
-							if value[0]==tn1:
+							if value[0] == tn1:
 								tn1 = tn2
 								tn2 = value[1]
 								metrix2 += 1
@@ -155,21 +161,21 @@ def next_hop(node, last_nid):
 						break
 				if metrix2>10:
 					break
-			if metrix2>metrix1: 
+			if metrix2 > metrix1: 
 				metrix = metrix1
 				nh = links[0][0]
-				print nh
+				#print nh
 			else: 
 				metrix = metrix2
 				nh = links[1][0]
-				print nh
-	if link1_flag==False and link2_flag==False:
+				#print nh
+	if link1_flag == False and link2_flag == False:
 		metrix = "inf"
 		nh = "not reachable"
-	if link1_flag==False and link2_flag==True:
+	if link1_flag == False and link2_flag == True:
 		metrix = metrix2
 		nh = links[1][0]
-	if link1_flag==True and link2_flag==False:
+	if link1_flag == True and link2_flag == False:
 		metrix = metrix1
 		nh = links[0][0]
 	return nh

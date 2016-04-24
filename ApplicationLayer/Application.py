@@ -8,6 +8,7 @@ import time
 import base64
 import binascii
 import os.path
+import json
 from random import randint
 
 # create paths to folders
@@ -111,24 +112,14 @@ def stop_service(S):
 def connect(Y, S, W):
 	global node, SID_LIST, CONN_LIST
 	dest_nid = Y
-	sid = S
-	window = W
-	SID = 22
-	data = sid + '@@' + window
+	string = {}
+	string['code'] = '20'
+	string['source_nid'] = str(node.GetNID())
+	string['SID'] = S
+	string['window'] = W
+	data = json.dumps(string)
+	Transport.l4_sendto(node, dest_nid, data)
 
-	Transport.l4_sendto(node, dest_nid, SID, data)
-
-
-
-	"""
-	This command establishes a connection from the local node, say X, to the
-	service point with SID S of the remote node Y. The window for the connection should be W. The
-	command returns a Connection ID (CID) C, that is unique for each open connection at the client.
-	Examples of resulting messages:
-	"connect(2, 123, 15000) - Success: DestNode=2, SID=123, CID=3, Win=15000B"
-	"connect(3, 123, 15000) - Failure: DestNode=3 connection request timed out"
-	"connect(3, 123, 15000) - Failure: DestNode=3 rejected connection request"
-	"""
 
 #function: close
 def close(C):
@@ -287,42 +278,70 @@ def link_up(N):
 		raw_input("press enter to continue...")
 
 # function: l5_recvfrom (incoming message from layer 4)
-def l5_recvfrom(SID, data, source_nid, dest_nid):
+def l5_recvfrom(source_nid, dest_nid, data):
 	global node, SID_LIST, CONN_LIST
 
-	print "current nid: ", node.GetNID()
-	print "dest_nid: ", dest_nid
-	print "source_nid: ", source_nid
+	data = json.loads(data)
+	code = data['code']
+
 
 	# if incoming message is a text message
-	if (SID == 100):
+	if (code == '10'):
+		text = data['message']
 		print '\n'
 		os.system('clear')
-		print "data: ", data
-		print ("Press enter to continue... ")
+		print "text: ", text
+		raw_input("Press enter to continue... ")
 
 	# if incoming message is a connection request
-	elif (SID == 22):
-		data = data.split('@@')
-		sid = data[0]
-		window = data[1]
-		SID = 23
+	elif (code == '20'):
+		dest_nid = data['source_nid']
+		SID = data['SID']
+		window = data['window']
 		CID = randint(1000, 9999)
-		data = str(sid) + "@@" + str(CID) + "@@" + str(window)
-		Transport.l4_sendto(node, dest_nid, SID, data)
-		print ("Press enter to continue... ")
+		print "SID_LIST", SID_LIST
+		print 'list_service_points', (list_service_points())
+		if (SID in SID_LIST):
+			if (len(SID_LIST['SID'][1]) < int(SID_LIST['SID'][0])):
+				SID_LIST['SID'].append(str(CID))
+				CONN_LIST['CID'] = dest_nid
+				string = {}
+				string['code'] = '30'
+				string['CID'] = str(CID)
+				data = json.dumps(string)
+			else:
+				string = {}
+				string['code'] = '40'
+				data = json.dumps(string)
+		else:
+			string = {}
+			string['code'] = '50'
+			data = json.dumps(string)
+
+		Transport.l4_sendto(node, dest_nid, data)
+		#print ("Press enter to continue... ")
 
 	# if incoming message is a connection response
-	if (SID == 23):
+	if (code == '30'):
+		print '\n'
+		CID = data['CID']
+		os.system('clear')
+		print ("CID: " + CID)
+
+	# if incoming message is a connection response
+	if (code == '40'):
 		print '\n'
 		os.system('clear')
-		print data
-		print SID_LIST
-		print CONN_LIST
-		print ("Press enter to continue... ")
+		print 'No connections for that SID available'
 
 	# if incoming message is a connection response
-	if (SID == 32):
+	if (code == '50'):
+		print '\n'
+		os.system('clear')
+		print 'SID does not exist'
+
+	# if incoming message is a connection response
+	if (code == 32):
 		print '\n'
 		filename = data
 		os.system('clear')
@@ -352,7 +371,7 @@ def l5_recvfrom(SID, data, source_nid, dest_nid):
 
 		print ("Press enter to continue... ")
 
-		if (SID == 33):
+		if (code == 33):
 			print "data: ", data
 
 	else:
@@ -372,7 +391,7 @@ def main (argv):
 		run = 1
 
   	# initialize node object in physical layer
-  	#node = Physical.InitializeTopology(sys.argv[1], sys.argv[2])
+  	node = Physical.InitializeTopology(sys.argv[1], sys.argv[2])
 
   	# wait for node to propagate
   	time.sleep(2)
@@ -450,9 +469,12 @@ def main (argv):
 		# for testing, send simple text message
 		if (message == "11"):
 			dest_nid = raw_input("Enter NID of target: ")
-			data = raw_input("Enter Text Message: ")
-			SID = 100
-			Transport.l4_sendto(node, dest_nid, SID, data)
+			text = raw_input("Enter Text Message: ")
+			string = {}
+			string['code'] = '10'
+			string['message'] = text
+			data = json.dumps(string)
+			Transport.l4_sendto(node, dest_nid, data)
 
 		# for testing node at physical layer
 		if (message == "12"):

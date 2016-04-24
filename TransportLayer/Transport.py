@@ -25,8 +25,8 @@ def chunkstring(string, length):
 	return (string[0+i:length+i] for i in range(0, len(string), length))
 
 
-def l4_sendto(node, dest_nid, SID, data):
-
+def l4_sendto(node, dest_nid, data):
+	"""
 	# if sending a file, check size
 	if SID == 33:
 		os.system('clear')
@@ -43,7 +43,7 @@ def l4_sendto(node, dest_nid, SID, data):
 
 
 		time.sleep(5)
-
+	"""
 
 
 	# get port table for this node and set values for destination target
@@ -62,7 +62,6 @@ def l4_sendto(node, dest_nid, SID, data):
 
 	# build datagram
 	frame = {}
-	frame['SID'] = SID
 	frame['source_nid'] = node.GetNID()
 	frame['source_port'] = node.GetPort()
 	frame['destination_nid'] = dest_nid
@@ -83,7 +82,6 @@ def l4_recvfrom(segment):
 
 	frame = json.loads(segment)
 
-	SID = frame['SID']
 	source_nid = frame['source_nid']
 	source_port = frame['source_port']
 	dest_nid = frame['destination_nid']
@@ -101,7 +99,7 @@ def l4_recvfrom(segment):
 
 	# compare checksums
 	if (checksum == test):
-		Application.l5_recvfrom(SID, data, source_nid, dest_nid)
+		Application.l5_recvfrom(source_nid, dest_nid, data)
 	else:
 		data = "message was corrupted"
-		Application.l5_recvfrom(SID, data, source_nid, dest_nid)
+		Application.l5_recvfrom(source_nid, dest_nid, data)
