@@ -9,6 +9,7 @@ node = None
 
 # function: InitializeTopology
 def InitializeTopology (nid, itc):
+
   # initialize node object
   node = Node(nid)
 
@@ -193,6 +194,7 @@ class Node(object):
   
   # print status
   def PrintStatus(self):
+
     os.system('clear')
     print "Status of this node"
     print "-------------------"
@@ -211,7 +213,6 @@ class Node(object):
 
 
 # for testing.....
-
 def main(argv):
 
   if len(sys.argv) != 3:
@@ -221,6 +222,8 @@ def main(argv):
   node = InitializeTopology(sys.argv[1], sys.argv[2])
   node.PrintStatus()
   links = node.GetLinks()
+
+
 
 if __name__ == "__main__":
   main(sys.argv)

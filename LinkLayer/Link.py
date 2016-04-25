@@ -74,6 +74,7 @@ class MyUDPHandler(SocketServer.BaseRequestHandler):
 
 # Function: l2_sendto()
 def l2_sendto(node, last_nid, dest_nid, payload):
+
   global mynode, nid, LOSS_FLAG, CORRUPT_FLAG, L, C
 
   # open log file
@@ -131,11 +132,10 @@ def l2_sendto(node, last_nid, dest_nid, payload):
 
       else:
         #target = n1
-        target = Routing.next_hop(node, dest_nid)
+        target = Routing.next_hop(node, last_nid)
         f.write("next hop: " + str(target) + "\n")
 
       # get links for this node
-
       links = node.GetLinks()
       link1 = links[0]
       link2 = links[1]
@@ -148,8 +148,6 @@ def l2_sendto(node, last_nid, dest_nid, payload):
       if str(link2[0]) == str(target):
         dest_hostname = link2[1]
         dest_port = link2[2]
-
-
 
       # create udp socket and send
       sock = socket.socket(socket.AF_INET, # Internet
@@ -173,6 +171,7 @@ def l2_sendto(node, last_nid, dest_nid, payload):
 
 # function: start listener
 def start_listener(node):
+
   # global variables
   global mynode, hostname, port, nid, link1_hostname, link1_port, link2_hostname, link2_port
 
@@ -204,6 +203,8 @@ def start_listener(node):
 
 # function: receiver (listener)
 def receiver():
+
+  # global variables
   global hostname, port
 
   # set socket for listener
@@ -218,6 +219,7 @@ def receiver():
 
 # function: hello (alive)
 def hello():
+
   # global variables
   global hostname, port, link1_hostname, link1_port, link2_hostname, link2_port, inhibit1, inhibit2
 
@@ -241,13 +243,15 @@ def hello():
 
 # function: timer (for hello)
 def timer(node):
+
+  # global variables 
   global link1_flag, link2_flag, inhibit1, inhibit2
 
   # eternal loop
   while (1):
 
     # first wait 10 seconds, then set flags to false
-    for x in range(4):
+    for x in range(10):
       time.sleep(1)
     link1_flag = False
     link2_flag = False
@@ -279,7 +283,10 @@ def timer(node):
 
 # function: inhibit
 def inhibit(N):
+
+  # global variables
   global inhibit1, inhibit2
+
   if N == 'i1':
     inhibit1 = True
 
@@ -295,6 +302,7 @@ def inhibit(N):
 
 # function: set_garbler
 def set_garbler(l, c):
+
   # initialize global variables
   global L, C
 
@@ -304,6 +312,7 @@ def set_garbler(l, c):
 
 # function: garbler
 def garbler():
+
   # Packet Loss Flags, probablility variable
   global LOSS_FLAG, CORRUPT_FLAG, L, C
 
@@ -323,7 +332,10 @@ def garbler():
   if (50 in corruptList):
     CORRUPT_FLAG = True
 
+# update flags in routing protocol
 def routing_flag1():
+
+  # global variables
   global link1_flag, link2_flag
 
   if link1_flag == True:
@@ -331,8 +343,9 @@ def routing_flag1():
   else:
     return False
 
-
+# update flags in routing protocol
 def routing_flag2():
+  
   if link2_flag == True:
     return True
   else:

@@ -16,7 +16,9 @@ import Link
 import Routing
 import Transport
       
+
 def l3_sendto(node, dest_nid, segment):
+
   # get list of all links from link table and find link for this node
   links = node.GetLinks()
   link1 = links[0]
@@ -36,9 +38,6 @@ def l3_sendto(node, dest_nid, segment):
 
   # set mtu
   mtu = 1000
-
-  # set length of data segment
-  #data_length = len(segment)
 
   # get port table for this node and set values for destination target
   PortTable = node.GetPortTable()
@@ -70,8 +69,10 @@ def l3_sendto(node, dest_nid, segment):
   # pass to link layer for sending
   Link.l2_sendto(node, last_nid, dest_nid, payload)
 
+
 # function: l3_recvfrom
 def l3_recvfrom(node, message):
+  
   # decode payload
   data = json.loads(message)
 

@@ -1,8 +1,6 @@
 #!/usr/bin/python
 
-import socket     # Low-level networking interface.
-import sys        # Basic system functionality.
-import threading  # Higher-level threading interface.
+import sys
 import json
 import hashlib
 import os
@@ -26,25 +24,6 @@ def chunkstring(string, length):
 
 
 def l4_sendto(node, dest_nid, data):
-	"""
-	# if sending a file, check size
-	if SID == 33:
-		os.system('clear')
-		size = sys.getsizeof(data)
-		print "file size: ", size
-		print data
-
-		mylist = list(chunkstring(data, 20000))
-		listlength = len(mylist)
-
-		for x in range(0, listlength):
-			print mylist[x]
-			print ' '
-
-
-		time.sleep(5)
-	"""
-
 
 	# get port table for this node and set values for destination target
 	PortTable = node.GetPortTable()
