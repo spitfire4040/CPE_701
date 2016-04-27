@@ -78,9 +78,12 @@ def route_table(node):
 			if metrix2>metrix1: 
 				metrix = metrix1
 				nhop = links[0][0]
-			else: 
+			if metrix2<metrix1: 
 				metrix = metrix2
 				nhop = links[1][0]
+			if metrix2==metrix1:
+				metrix = metrix1
+				nhop = max(int(links[0][0]), int(links[1][0]))
 			if link1_flag==False and link2_flag==False:
 				metrix = "inf"
 				nhop = "not reachable"
@@ -157,11 +160,12 @@ def next_hop(node, last_nid):
 			if metrix2>metrix1: 
 				metrix = metrix1
 				nh = links[0][0]
-				#print nh
-			else: 
+			if metrix2<metrix1: 
 				metrix = metrix2
 				nh = links[1][0]
-				#print nh
+			if metrix2==metrix1:
+				metrix = metrix1
+				nh = max(int(links[0][0]), int(links[1][0]))
 			if link1_flag==False and link2_flag==False:
 				metrix = "inf"
 				nh = "not reachable"
