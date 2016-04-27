@@ -62,10 +62,9 @@ class MyUDPHandler(SocketServer.BaseRequestHandler):
         # set link flags
         if message[1] == link1_port:
           link1_flag = True
-          #mynode.SetUpFlagL1(True)
+  
         if message[1] == link2_port:
           link2_flag = True
-          #mynode.SetUpFlagL2(True)
 
       # not hello, forward to network layer
       else:
@@ -131,12 +130,8 @@ def l2_sendto(node, last_nid, dest_nid, payload):
         target = n1
 
       else:
-        #target = n1
-        #target = Routing.next_hop(node, last_nid)
         target = Routing.next_hop(node, dest_nid)
         f.write("next hop: " + str(target) + "\n")
-        print dest_nid
-        print "TARGET: ", target
 
       # get links for this node
       links = node.GetLinks()

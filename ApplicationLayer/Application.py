@@ -9,6 +9,7 @@ import base64
 import binascii
 import os.path
 import json
+import PIL
 from random import randint
 
 # create paths to folders
@@ -59,21 +60,26 @@ def list_service_points():
 	# wait for user
 	raw_input("Press enter to continue...")
 
+# finction: image to array
+def image2array(im):
+	if im.mode not in ("L", "F"):
+		raise ValueError, "can only convert single-layer images"
+	if im.mode == "L":
+		a = Numeric.fromstring(im.tostring(), Numeric.UnsignedInt8)
+	else:
+		a = Numeric.fromstring(im.tostring(), Numeric.Float32)
+	a.shape = im.size[1], im.size[0]
+	return a
 
-# function: encode_file
-def encode_file(myfile, SID):
-
-	with open(myfile, "rb") as image_file:
-		encoded_string = base64.b64encode(image_file.read())
-	return encoded_string
-
-
-# function: decode_file
-def decode_file(myfile, SID):
-
-	out = open(myfile, "wb")
-	out.write(encoded_string.decode('base64'))
-	out.close()
+# function: array to image
+def array2image(a):
+	if a.typecode() == Numeric.UnsignedInt8:
+		mode = "L"
+	elif a.typecode() == Numeric.Float32:
+		mode = "F"
+	else:
+		raise ValueError, "unsupported image mode"
+	return Image.fromstring(mode, (a.shape[1], a.shape[0]), a.tostring())
 
 
 # function: print usage (bad input)
@@ -482,23 +488,42 @@ def l5_recvfrom(source_nid, dest_nid, data):
 			os.system('clear')
 			print ("yup, it's here. I'll send it!")
 			dest_nid = data['source_nid']
-			print dest_nid
+			"""
+
+			text = ''
+			with open(filename, 'rb') as f:
+				byte = f.read(1)
+				while byte != '':
+					encodedbyte = base64.b64encode(byte)
+					text += str(encodedbyte)
+					byte = f.read(1)
+
+			"""
+			text = ''
+			f = open(filename, 'r')
+			for line in f:
+				text += line
+			f.close()
+
 			string = {}
 			string['code'] = '70'
-			string['message'] = 'here is your file'
+			string['message'] = 'Your file has been delivered...'
+			string['filename'] = filename
+			string['file'] = text
 			data = json.dumps(string)
+
 			Transport.l4_sendto(node, dest_nid, data)
 
 		else:
 			os.system('clear')
 			print ("that file isn't here")
 			dest_nid = data['source_nid']
-			print dest_nid
 			string = {}
 			string['code'] = '80'
 			string['message'] = "file " + filename + " does not exist, sorry!"
 			data = json.dumps(string)
 			Transport.l4_sendto(node, dest_nid, data)
+
 
 		print ("Press enter to continue... ")
 
@@ -506,6 +531,16 @@ def l5_recvfrom(source_nid, dest_nid, data):
 		os.system('clear')
 		answer = data['message']
 		print answer
+		incomming = data['file']
+		print incomming
+		filename = data['filename']
+
+		
+		f = open(filename, 'wb')
+		for line in incomming:
+			f.write(line)
+		f.close()
+		
 		print 'Press enter to continue...'
 
 	if (code == '80'):
