@@ -34,6 +34,7 @@ def list_service_points():
 
 	SID_LIST = None
 	CONN_LIST = None
+	MY_CONNS = None
 
 	if os.path.isfile('sid_data'):
 		with open('sid_data', 'r') as fp1:
@@ -45,9 +46,15 @@ def list_service_points():
 			CONN_LIST = json.load(fp2)
 			fp2.close()
 
+	if os.path.isfile('my_conns'):
+		with open('my_conns', 'r') as fp3:
+			MY_CONNS = json.load(fp3)
+			fp3.close()
+
 	# print dicts
 	print "SID_LIST: ", SID_LIST
 	print "CONN_LIST: ", CONN_LIST
+	print "MY_CONNS: ", MY_CONNS
 
 	# wait for user
 	raw_input("Press enter to continue...")
@@ -233,35 +240,35 @@ def download(C, F):
 	# global variables
 	global node
 
-	# set file name
-	filename = F
-	code = '60' # request a file
+	MY_CONNS = {}
 
-	if C in CONN_LIST:
-		for item in CONN_LIST:
-			if item == C:
-				dest_nid = CONN_LIST[C]
-	data = filename
+	# open file and look for CONN_LIST
+	if os.path.isfile('my_conns'):
+		with open('my_conns', 'r') as fp:
+			MY_CONNS = json.load(fp)
+			fp.close()	
+
+	if str(C) in MY_CONNS:
+		for item in MY_CONNS:
+			if item == str(C):
+				dest_nid = MY_CONNS[C]
+
+	else:
+		print "download(" + str(C) + ", " + F + ") - CID=" + str(C) + " does not exist"
+		return	
+
+	# set variables
+	code = '60' # request a file
+	filename = F
+	CID = C
+	string = {}
+	string['code'] = code
+	string['filename'] = filename
+	string['source_nid'] = node.GetNID()
+	data = json.dumps(string)
 
 	Transport.l4_sendto(node, dest_nid, data)
 
-
-	"""
-	This command downloads a file with name F through the connection with CID
-	C. The transfer is possible only if that connection is not currently busy with another download
-	operation. The file F should be present at the current working directory of the process running at 
-	CPE 701 Internet Protocol Design CSE Department, UNR
-	5
-	the remote end of the connection. After the transfer is completed, a message should report the
-	duration and average throughput of the transfer. Note that the same connection can be used for
-	multiple download operations.
-	Examples of resulting messages:
-	"download(4, foo) - Success: File=foo has been downloaded (duration=3sec,throughput=160KBps)"
-	"download(4, bar) - Failure: File=bar does not exist"
-	"download(5, foo) - Failure: CID=5 does not exist"
-	"download(6, bar) - Failure: CID=6 is busy with other transfer"
-	"download(7, bar) - Failure: CID=7 is broken"
-	"""
 
 # function: set garbler
 def set_garbler(L, C):
@@ -383,6 +390,7 @@ def l5_recvfrom(source_nid, dest_nid, data):
 
 	SID_LIST = {}
 	CONN_LIST = {}
+	MY_CONNS = {}
 
 	# open file and look for SID_LIST
 	if os.path.isfile('sid_data'):
@@ -395,6 +403,12 @@ def l5_recvfrom(source_nid, dest_nid, data):
 		with open('conn_data', 'r') as fp2:
 			CONN_LIST = json.load(fp2)
 			fp2.close()
+
+	# open file and look for MY_CONNS
+	if os.path.isfile('my_conns'):
+		with open('my_conns', 'r') as fp3:
+			MY_CONNS = json.load(fp3)
+			fp3.close()			
 
 	data = json.loads(data)
 	code = data['code']
@@ -415,14 +429,12 @@ def l5_recvfrom(source_nid, dest_nid, data):
 
 		if (SID in SID_LIST):
 
-			print 'length of CONN_LIST: ', len(CONN_LIST)
-			print 'max length: ', SID_LIST[SID]
-
 			if int(len(CONN_LIST)) < int(SID_LIST[SID]):
 				CONN_LIST[CID] = dest_nid
 				string = {}
 				string['code'] = '30'
 				string['CID'] = str(CID)
+				string['source_nid'] = str(node.GetNID())
 				data = json.dumps(string)
 			else:
 				string = {}
@@ -434,14 +446,16 @@ def l5_recvfrom(source_nid, dest_nid, data):
 			data = json.dumps(string)
 
 		Transport.l4_sendto(node, dest_nid, data)
-		print ("Press enter to continue... ")
+		#print ("Press enter to continue... ")
 
 	# if incoming message is a connection response
 	if (code == '30'):
 		print '\n'
 		CID = data['CID']
+		source_nid = data['source_nid']
 		os.system('clear')
 		print ("CID: " + CID)
+		MY_CONNS[CID] = source_nid
 
 	# if incoming message is a connection response
 	if (code == '40'):
@@ -459,41 +473,46 @@ def l5_recvfrom(source_nid, dest_nid, data):
 
 	# if incoming message is a connection response
 	if (code == '60'):
-		pass
 
-		"""
 		print '\n'
-		filename = data
+		filename = data['filename']
 		os.system('clear')
 		exists = os.path.isfile(filename)
 		if (exists == True):
+			os.system('clear')
 			print ("yup, it's here. I'll send it!")
-
-			temp = []
-			f = open(filename)
-			cf = f.read()
-			f.close()
-			string = base64.b64encode(str(cf))
-			newstring = bin(int(binascii.hexlify(string), 16))
-			dest_nid = source_nid
-			source_nid = node.GetNID()
-			SID = 33
-			data = newstring
-			Transport.l4_sendto(node, dest_nid, SID, data)
+			dest_nid = data['source_nid']
+			print dest_nid
+			string = {}
+			string['code'] = '70'
+			string['message'] = 'here is your file'
+			data = json.dumps(string)
+			Transport.l4_sendto(node, dest_nid, data)
 
 		else:
-			print ("nope, it's not here")
-			dest_nid = source_nid
-			source_nid = node.GetNID()
-			SID = 100
-			data = "file " + filename + " does not exist, sorry!"
-			Transport.l4_sendto(node, dest_nid, SID, data)
+			os.system('clear')
+			print ("that file isn't here")
+			dest_nid = data['source_nid']
+			print dest_nid
+			string = {}
+			string['code'] = '80'
+			string['message'] = "file " + filename + " does not exist, sorry!"
+			data = json.dumps(string)
+			Transport.l4_sendto(node, dest_nid, data)
 
 		print ("Press enter to continue... ")
 
-		if (code == 33):
-			print "data: ", data
-		"""
+	if (code == '70'):
+		os.system('clear')
+		answer = data['message']
+		print answer
+		print 'Press enter to continue...'
+
+	if (code == '80'):
+		os.system('clear')
+		answer = data['message']
+		print answer
+		print 'Press enter to continue...'
 
 	else:
 		pass
@@ -507,6 +526,11 @@ def l5_recvfrom(source_nid, dest_nid, data):
 	with open('conn_data', 'w') as fp2:
 		json.dump(CONN_LIST, fp2)
 		fp2.close()
+
+	# store dict to file for later
+	with open('my_conns', 'w') as fp3:
+		json.dump(MY_CONNS, fp3)
+		fp3.close()
 
 
 # main function

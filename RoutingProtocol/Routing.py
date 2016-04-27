@@ -104,7 +104,7 @@ def next_hop(node, last_nid):
 
 	links = node.GetLinks()
 	tabl = node.linkTable
-	print "in routing", last_nid;
+	#print "in routing", last_nid;
 	for k in tabl.keys():
 		if (k==int(last_nid)):
 			metrix1 = 1
@@ -154,11 +154,11 @@ def next_hop(node, last_nid):
 			if metrix2>metrix1: 
 				metrix = metrix1
 				nh = links[0][0]
-				print nh
+				#print nh
 			else: 
 				metrix = metrix2
 				nh = links[1][0]
-				print nh
+				#print nh
 			if link1_flag==False and link2_flag==False:
 				metrix = "inf"
 				nh = "not reachable"
