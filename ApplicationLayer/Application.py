@@ -488,22 +488,13 @@ def l5_recvfrom(source_nid, dest_nid, data):
 			os.system('clear')
 			print ("yup, it's here. I'll send it!")
 			dest_nid = data['source_nid']
-			"""
 
 			text = ''
 			with open(filename, 'rb') as f:
-				byte = f.read(1)
-				while byte != '':
-					encodedbyte = base64.b64encode(byte)
-					text += str(encodedbyte)
-					byte = f.read(1)
-
-			"""
-			text = ''
-			f = open(filename, 'r')
-			for line in f:
-				text += line
-			f.close()
+				bytes = f.read()
+				encodedbytes = base64.b64encode(bytes)
+				text += str(encodedbytes)
+			print text
 
 			string = {}
 			string['code'] = '70'
@@ -531,16 +522,14 @@ def l5_recvfrom(source_nid, dest_nid, data):
 		os.system('clear')
 		answer = data['message']
 		print answer
-		incomming = data['file']
-		print incomming
+		incoming = data['file']
 		filename = data['filename']
 
-		
+		text = base64.b64decode(incoming)
 		f = open(filename, 'wb')
-		for line in incomming:
-			f.write(line)
+		f.write(text)
 		f.close()
-		
+
 		print 'Press enter to continue...'
 
 	if (code == '80'):
@@ -677,3 +666,5 @@ def main (argv):
 
 if __name__ == '__main__':
   main(sys.argv)
+
+ # April 28, 2016

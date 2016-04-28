@@ -176,3 +176,5 @@ def next_hop(node, last_nid):
 				metrix = metrix1
 				nh = links[0][0]
 	return nh
+
+ # April 28, 2016
