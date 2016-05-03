@@ -13,6 +13,7 @@ link1_flag = ''
 link2_flag = ''
 
 # function: route table printing
+
 def route_table(node):
 	# include global variables
 	global link1_flag, link2_flag	# Flags to check link status of the current node
@@ -84,13 +85,13 @@ def route_table(node):
 			if metrix2==metrix1:
 				metrix = metrix1
 				nhop = max(int(links[0][0]), int(links[1][0]))
-			if link1_flag==False and link2_flag==False:
+			if node.upL1==False and node.upL2==False:
 				metrix = "inf"
 				nhop = "not reachable"
-			if link1_flag==False and link2_flag==True:
+			if node.upL1==False and node.upL2==True:
 				metrix = metrix2
 				nhop = links[1][0]
-			if link1_flag==True and link2_flag==False:
+			if node.upL1==True and node.upL2==False:
 				metrix = metrix1
 				nhop = links[0][0]
 			print '{0:^14}{1:^21}{2:^3}\n'.format(k, metrix, nhop)
@@ -166,15 +167,13 @@ def next_hop(node, last_nid):
 			if metrix2==metrix1:
 				metrix = metrix1
 				nh = max(int(links[0][0]), int(links[1][0]))
-			if link1_flag==False and link2_flag==False:
+			if node.upL1==False and node.upL2==False:
 				metrix = "inf"
 				nh = "not reachable"
-			if link1_flag==False and link2_flag==True:
+			if node.upL1==False and node.upL2==True:
 				metrix = metrix2
 				nh = links[1][0]
-			if link1_flag==True and link2_flag==False:
+			if node.upL1==True and node.upL2==False:
 				metrix = metrix1
 				nh = links[0][0]
 	return nh
-
- # April 28, 2016
